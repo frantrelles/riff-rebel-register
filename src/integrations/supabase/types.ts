@@ -14,7 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      artists: {
+        Row: {
+          active: boolean
+          country: string | null
+          created_at: string
+          description: string | null
+          formation_year: number | null
+          genre: string
+          id: string
+          name: string
+          popular_albums: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          formation_year?: number | null
+          genre: string
+          id?: string
+          name: string
+          popular_albums?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          formation_year?: number | null
+          genre?: string
+          id?: string
+          name?: string
+          popular_albums?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

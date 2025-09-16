@@ -1,73 +1,256 @@
-# Welcome to your Lovable project
+# Alternative Music Artists API
 
-## Project info
+A RESTful API for managing information about alternative music bands and artists, built with Supabase Edge Functions and PostgreSQL.
 
-**URL**: https://lovable.dev/projects/71cb92c0-ff6e-4ecf-9a0f-0e35d542323e
+## Features
 
-## How can I edit this code?
+- **Full CRUD Operations**: Create, Read, Update, and Delete artists
+- **Pagination**: Efficient data retrieval with page-based pagination
+- **Filtering**: Filter artists by genre, country, and active status
+- **Soft Delete**: Artists are marked as inactive instead of being permanently deleted
+- **Public API**: No authentication required for public access
+- **Real-time Updates**: Built on Supabase for real-time capabilities
 
-There are several ways of editing your application.
+## Tech Stack
 
-**Use Lovable**
+- **Backend**: Supabase Edge Functions (Deno runtime)
+- **Database**: PostgreSQL with Row Level Security
+- **Frontend**: React + TypeScript + Tailwind CSS
+- **API Documentation**: Interactive web interface
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/71cb92c0-ff6e-4ecf-9a0f-0e35d542323e) and start prompting.
+## Data Structure
 
-Changes made via Lovable will be committed automatically to this repo.
+### Artist Schema
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```typescript
+interface Artist {
+  id: string;              // UUID (auto-generated)
+  name: string;            // Required
+  genre: string;           // Required (e.g., "Indie Rock", "Post-Punk", "Shoegaze")
+  formation_year?: number; // Optional
+  country?: string;        // Optional
+  active: boolean;         // Default: true
+  description?: string;    // Optional
+  popular_albums?: string[]; // Array of album names
+  created_at: string;      // Auto-generated timestamp
+  updated_at: string;      // Auto-updated timestamp
+}
 ```
 
-**Edit a file directly in GitHub**
+## API Endpoints
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Base URL: `https://fartltsfwubdoohzoumw.supabase.co/functions/v1/artists`
 
-**Use GitHub Codespaces**
+### GET /artists
+Retrieve all artists with optional pagination and filtering.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+**Query Parameters:**
+- `page` (number): Page number (default: 1)
+- `limit` (number): Items per page (default: 10)
+- `genre` (string): Filter by genre
+- `country` (string): Filter by country
+- `active` (boolean): Filter by active status
 
-## What technologies are used for this project?
+**Example:**
+```bash
+GET /artists?page=1&limit=5&genre=Indie%20Rock&active=true
+```
 
-This project is built with:
+**Response:**
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "name": "Arctic Monkeys",
+      "genre": "Indie Rock",
+      "formation_year": 2002,
+      "country": "UK",
+      "active": true,
+      "description": "English rock band formed in Sheffield",
+      "popular_albums": ["Whatever People Say I Am, That's What I'm Not", "AM"],
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 5,
+    "total": 50,
+    "totalPages": 10,
+    "hasNext": true,
+    "hasPrev": false
+  }
+}
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### GET /artists/:id
+Retrieve a specific artist by ID.
 
-## How can I deploy this project?
+**Response:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "name": "The Strokes",
+    "genre": "Indie Rock",
+    // ... other fields
+  }
+}
+```
 
-Simply open [Lovable](https://lovable.dev/projects/71cb92c0-ff6e-4ecf-9a0f-0e35d542323e) and click on Share -> Publish.
+### POST /artists
+Create a new artist.
 
-## Can I connect a custom domain to my Lovable project?
+**Request Body:**
+```json
+{
+  "name": "The White Stripes",
+  "genre": "Garage Rock",
+  "formation_year": 1997,
+  "country": "USA",
+  "description": "American rock duo",
+  "popular_albums": ["White Blood Cells", "Elephant"]
+}
+```
 
-Yes, you can!
+**Response:**
+```json
+{
+  "data": {
+    "id": "new-uuid",
+    "name": "The White Stripes",
+    "genre": "Garage Rock",
+    // ... other fields with generated timestamps
+  }
+}
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### PUT /artists/:id
+Update an existing artist.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+**Request Body:**
+```json
+{
+  "description": "Updated description",
+  "popular_albums": ["White Blood Cells", "Elephant", "Icky Thump"]
+}
+```
+
+### DELETE /artists/:id
+Soft delete an artist (sets active to false).
+
+**Response:**
+```json
+{
+  "message": "Artist deleted successfully",
+  "data": {
+    "id": "uuid",
+    "active": false,
+    // ... other fields
+  }
+}
+```
+
+## Error Handling
+
+All endpoints return appropriate HTTP status codes:
+
+- `200` - Success
+- `201` - Created
+- `400` - Bad Request (validation errors)
+- `404` - Not Found
+- `500` - Internal Server Error
+
+Error responses include a descriptive message:
+
+```json
+{
+  "error": "Name and genre are required"
+}
+```
+
+## Setup Instructions
+
+### Prerequisites
+- Supabase account
+- Node.js 18+ (for local development)
+
+### Environment Variables
+```bash
+SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+```
+
+### Database Setup
+The database schema is automatically created via migrations:
+
+```sql
+CREATE TABLE public.artists (
+  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  genre TEXT NOT NULL,
+  formation_year INTEGER,
+  country TEXT,
+  active BOOLEAN NOT NULL DEFAULT true,
+  description TEXT,
+  popular_albums TEXT[] DEFAULT ARRAY[]::TEXT[],
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+```
+
+### Local Development
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Start development server: `npm run dev`
+4. Open http://localhost:5173
+
+### Deployment
+The Edge Functions are automatically deployed with your Supabase project.
+
+## Usage Examples
+
+### Create an Artist
+```bash
+curl -X POST https://your-project.supabase.co/functions/v1/artists \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Radiohead",
+    "genre": "Alternative Rock",
+    "formation_year": 1985,
+    "country": "UK",
+    "description": "English rock band from Abingdon, Oxfordshire",
+    "popular_albums": ["OK Computer", "Kid A", "In Rainbows"]
+  }'
+```
+
+### Get All Artists
+```bash
+curl https://your-project.supabase.co/functions/v1/artists
+```
+
+### Filter by Genre
+```bash
+curl "https://your-project.supabase.co/functions/v1/artists?genre=Post-Punk&limit=5"
+```
+
+### Update an Artist
+```bash
+curl -X PUT https://your-project.supabase.co/functions/v1/artists/your-artist-id \
+  -H "Content-Type: application/json" \
+  -d '{
+    "popular_albums": ["OK Computer", "Kid A", "In Rainbows", "A Moon Shaped Pool"]
+  }'
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## License
+
+MIT License - see LICENSE file for details.
